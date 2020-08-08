@@ -2,18 +2,17 @@
 import pandas as pd
 from splinter import Browser
 from bs4 import BeautifulSoup
+from twitter_scraper import get_tweets
+
 
 # Function to choose the executable path to driver
 def init_browser():
-    executable_path = {"executable_path": "C:/chromedriver/chromedriver"}
+    executable_path = {"executable_path": "chromedriver"}
     return Browser("chrome", **executable_path, headless=False)
 
 # Full Scrape function.
 def scrape():
 
-    """ NASA Mars News """
-
-    # Run init_browser/driver.
     browser = init_browser()
 
     # Visit Nasa news url.
@@ -28,8 +27,9 @@ def scrape():
 
     # Retrieve the most recent article's title and paragraph.
     # Store in news variables.
-    news_title = news_soup.find("div", class_="content_title").find('a').text
-    news_paragraph = news_soup.find("div", class_="article_teaser_body").get_text()
+    news_title = news_soup.find("div", class_="content_title")
+    news_paragraph = news_soup.find("div", class_="article_teaser_body").text
+
 
     # Exit Browser.
     browser.quit()
@@ -51,7 +51,7 @@ def scrape():
 
     # Find "more info" for first image, set to variable, and command click.
     browser.is_element_present_by_text("more info", wait_time=1)
-    more_info_element = browser.find_link_by_partial_text("more info")
+    more_info_element = browser.links.find_by_partial_text("more info")
     more_info_element.click()
 
     # HTML Object.
@@ -74,132 +74,67 @@ def scrape():
 
     """ Mars Weather """
 
-    # Run init_browser/driver.
+# Run init_browser/driver.
     browser = init_browser()
 
-    # Visit the url for Mars Weather twitter account.
-    weather_url = "https://twitter.com/marswxreport?lang=en"
-    browser.visit(weather_url)
-
-    # HTML Object.
-    html = browser.html
 
     # Parse HTML with Beautiful Soup
     weather_soup = BeautifulSoup(html, "html.parser")
+    #weather
+    twitter_url = 'https://twitter.com/marswxreport?lang=en'
+    browser.visit(twitter_url)
+    url = "https://twitter.com/marswxreport?lang=en"
+    browser.visit(url)
+    html = browser.html
+    weather_soup = BeautifulSoup(html, "html.parser")
+    mars_tweets = []
+    for tweet in get_tweets('MarsWxReport', pages=1):
+        mars_tweets.append(tweet) # Add values to the list
 
-    # Retrieve ALL 'ol' tags and save to variable 'tweets'.
-    tweets = weather_soup.find_all('ol', class_='stream-items')
-    # Iterate through all 'tweets' and find text in 'p' tag.
-    # Break for most recent tweet if keyword 'InSight' in text.
-    # Otherwise move onto next tweet.
-    for tweet in tweets:
-        mars_weather = tweet.find('p', class_="TweetTextSize TweetTextSize--normal js-tweet-text tweet-text").text
-        if 'InSight' in tweet:
-            break
-        else:
-            continue
-
-    # Exit Browser.
+    # Extract the weather value of the latest MarsWxReport Tweet
+        mars_weather_dict = {}
+        mars_weather_dict = mars_tweets[0]
+        mars_weather = mars_weather_dict.get('text')
+        
     browser.quit()
-
-    # Remove 'anchor' tag text from "mars_weather" via split on 'pic'.
-    mars_weather = mars_weather.split('pic')[0]
-
-    # Replace '\n' with ' '.
-    mars_weather = mars_weather.replace('\n', ' ')
 
     # Print most recent Mars Weather.
     print(mars_weather)
 
     """ Mars Facts """
-
-    # URL for Mars Facts.
+    browser = init_browser()
     facts_url = "https://space-facts.com/mars/"
-
-    # Use Panda's `read_html` to parse the URL.
-    facts_tables = pd.read_html(facts_url)
-
-    # Required table stored in index "1".
-    # Save as DF.
-    df_mars_facts = facts_tables[1]
-
-    # Rename columns.
-    df_mars_facts.columns = ['Description', 'Value']
-
-    # Set index to 'Description'.
-    df_mars_facts.set_index('Description', inplace=True)
-
-    # # Convert DF to html and save in Resources Folder.
-    # df_mars_facts.to_html('Resources/mars_facts.html')
-
-    # Convert DF to HTML string.
-    mars_facts = df_mars_facts.to_html(header=True, index=True)
+    browser.visit(facts_url)
+    mars_data = pd.read_html(facts_url)
+    mars_data = pd.DataFrame(mars_data[0])
+    mars_facts = mars_data.to_html(header = False, index = False)
+    browser.quit()
 
     """ Mars Hemispheres """
 
-    # Run init_browser/driver.
     browser = init_browser()
-
-    # Visit the url for USGS Astrogeology.
-    astrogeo_url = "https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars"
-    browser.visit(astrogeo_url)
-
-    # HTML Object.
+    hemispheres_url = "https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars"
+    browser.visit(hemispheres_url)
     html = browser.html
+    soup = BeautifulSoup(html, "html.parser")
+    hemisphere_image_urls = []
 
-    # Parse HTML with Beautiful Soup
-    astrogeo_soup = BeautifulSoup(html, "html.parser")
+    products = soup.find("div", class_ = "result-list" )
+    hemispheres = products.find_all("div", class_="item")
 
-    # Store main URL in a variable so that 'href' can be appended to it after each iteration.
-    main_astrogeo_url = "https://astrogeology.usgs.gov"
-
-    # Each link is located in 'div' tag, class "item".
-    # Locate all 4 and store in variable.
-    hems_url = astrogeo_soup.find_all("div", class_="item")
-
-    # Create empty list for each Hemisphere URL.
-    hemis_url = []
-
-    for hem in hems_url:
-        hem_url = hem.find('a')['href']
-        hemis_url.append(hem_url)
+    for hemisphere in hemispheres:
+        title = hemisphere.find("h3").text
+        title = title.replace("Enhanced", "")
+        end_link = hemisphere.find("a")["href"]
+        image_link = "https://astrogeology.usgs.gov/" + end_link    
+        browser.visit(image_link)
+        html = browser.html
+        soup=BeautifulSoup(html, "html.parser")
+        downloads = soup.find("div", class_="downloads")
+        image_url = downloads.find("a")["href"]
+        hemisphere_image_urls.append({"title": title, "img_url": image_url})
 
     browser.quit()
-
-    # Create list of dictionaries called hemisphere_image_urls.
-    # Iterate through all URLs saved in hemis_url.
-    # Concatenate each with the main_astrogeo_url.
-    # Confirm the concat worked properly: confirmed.
-    # Visit each URL.
-
-    hemisphere_image_urls = []
-    for hemi in hemis_url:
-        hem_astrogeo_url = main_astrogeo_url + hemi
-        print(hem_astrogeo_url)
-        
-        # Run init_browser/driver.
-        browser = init_browser()
-        browser.visit(hem_astrogeo_url)
-        
-        # HTML Object.
-        html = browser.html
-
-        # Parse HTML with Beautiful Soup
-        hemi_soup = BeautifulSoup(html, "html.parser")
-
-        # Locate each title and save to raw_title, to be cleaned.
-        raw_title = hemi_soup.find("h2", class_="title").text
-        
-        # Remove ' Enhanced' tag text from each "title" via split on ' Enhanced'.
-        title = raw_title.split(' Enhanced')[0]
-        
-        # Locate each 'full.jpg' for all 4 Hemisphere URLs.
-        img_url = hemi_soup.find("li").a['href']
-        
-        # Append both title and img_url to 'hemisphere_image_url'.
-        hemisphere_image_urls.append({'title': title, 'img_url': img_url})
-        
-        browser.quit()
 
     print(hemisphere_image_urls)
 
@@ -209,7 +144,7 @@ def scrape():
     mars_data = {}
 
     # Append news_title and news_paragraph to mars_data.
-    mars_data['news_title'] = news_title
+    mars_data['news_title'] = news_title.get_text()
     mars_data['news_paragraph'] = news_paragraph
 
     # Append featured_image_url to mars_data.
