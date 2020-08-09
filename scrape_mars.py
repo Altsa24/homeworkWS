@@ -28,7 +28,7 @@ def scrape():
     # Retrieve the most recent article's title and paragraph.
     # Store in news variables.
     news_title = news_soup.find("div", class_="content_title")
-    news_paragraph = news_soup.find("div", class_="article_teaser_body").text
+    news_paragraph = news_soup.find("div", class_="article_teaser_body").text()
 
 
     # Exit Browser.
