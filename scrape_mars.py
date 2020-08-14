@@ -27,9 +27,8 @@ def scrape():
 
     # Retrieve the most recent article's title and paragraph.
     # Store in news variables.
-    news_title = news_soup.find("div", class_="content_title")
-    news_paragraph = news_soup.find("div", class_="article_teaser_body").text()
-
+    news_title = news_soup.find("div", class_="content_title").get_text()
+    news_paragraph = news_soup.find("div", class_="article_teaser_body")
 
     # Exit Browser.
     browser.quit()
@@ -74,28 +73,26 @@ def scrape():
 
     """ Mars Weather """
 
-# Run init_browser/driver.
+    # Run init_browser/driver.
     browser = init_browser()
 
+    # Visit Nasa news url.
+    tweet_url = "https://twitter.com/MarsWxReport"
+    browser.visit(tweet_url)
+
+    # HTML Object.
+    html = browser.html
 
     # Parse HTML with Beautiful Soup
-    weather_soup = BeautifulSoup(html, "html.parser")
-    #weather
-    twitter_url = 'https://twitter.com/marswxreport?lang=en'
-    browser.visit(twitter_url)
-    url = "https://twitter.com/marswxreport?lang=en"
-    browser.visit(url)
-    html = browser.html
-    weather_soup = BeautifulSoup(html, "html.parser")
-    mars_tweets = []
-    for tweet in get_tweets('MarsWxReport', pages=1):
-        mars_tweets.append(tweet) # Add values to the list
+    news_soup = BeautifulSoup(html, "html.parser")
 
-    # Extract the weather value of the latest MarsWxReport Tweet
-        mars_weather_dict = {}
-        mars_weather_dict = mars_tweets[0]
-        mars_weather = mars_weather_dict.get('text')
-        
+    # Retrieve the most recent article's title and paragraph.
+    # Store in news variables.
+    mars_weather = news_soup.find("div", class_="css-901oao r-hkyrab r-1qd0xha r-a023e6 r-16dba41 r-ad9z0x r-bcqeeo r-bnwqim r-qvutc0").get_text()
+    #news_paragraph = news_soup.find("div", class_="article_teaser_body").get_text()
+
+
+    # Exit Browser.
     browser.quit()
 
     # Print most recent Mars Weather.
@@ -144,7 +141,7 @@ def scrape():
     mars_data = {}
 
     # Append news_title and news_paragraph to mars_data.
-    mars_data['news_title'] = news_title.get_text()
+    mars_data['news_title'] = news_title
     mars_data['news_paragraph'] = news_paragraph
 
     # Append featured_image_url to mars_data.
