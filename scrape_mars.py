@@ -91,8 +91,9 @@ def scrape():
     # Retrieve the most recent article's title and paragraph.
     # Store in news variables.
     result = twitter_soup.find('div',{"data-testid":"tweet"})
-    mars_weather = result.find("div", class_="css-901oao r-hkyrab r-1qd0xha r-a023e6 r-16dba41 r-ad9z0x r-bcqeeo r-bnwqim r-qvutc0")
-    
+    mars_weather = result.find("div",class_="css-901oao r-hkyrab r-1qd0xha r-a023e6 r-16dba41 r-ad9z0x r-bcqeeo r-bnwqim r-qvutc0")
+    result = result.find('div',class_="css-901oao r-hkyrab r-1qd0xha r-a023e6 r-16dba41 r-ad9z0x r-bcqeeo r-bnwqim r-qvutc0")
+
     mars_weather = result.text
     mars_weather = mars_weather.replace("Mars Weather@MarsWxReport·12h","")
 
