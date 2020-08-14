@@ -27,9 +27,11 @@ def scrape():
 
     # Retrieve the most recent article's title and paragraph.
     # Store in news variables.
-    news_title = news_soup.find("div", class_="content_title").get_text()
-    news_paragraph = news_soup.find("div", class_="article_teaser_body")
-
+    result = news_soup.find('div',class_="slide")
+    news_title = result.find('div',class_='content_title')
+    news_paragraph = result.find('div',class_='rollover_description_inner')
+    news_title = news_title.text
+    news_paragraph = news_paragraph.text
     # Exit Browser.
     browser.quit()
 
@@ -84,12 +86,15 @@ def scrape():
     html = browser.html
 
     # Parse HTML with Beautiful Soup
-    news_soup = BeautifulSoup(html, "html.parser")
+    twitter_soup = BeautifulSoup(html, "html.parser")
 
     # Retrieve the most recent article's title and paragraph.
     # Store in news variables.
-    mars_weather = news_soup.find("div", class_="css-901oao r-hkyrab r-1qd0xha r-a023e6 r-16dba41 r-ad9z0x r-bcqeeo r-bnwqim r-qvutc0").get_text()
-    #news_paragraph = news_soup.find("div", class_="article_teaser_body").get_text()
+    result = twitter_soup.find('div',{"data-testid":"tweet"})
+    mars_weather = result.find("div", class_="css-901oao r-hkyrab r-1qd0xha r-a023e6 r-16dba41 r-ad9z0x r-bcqeeo r-bnwqim r-qvutc0")
+    
+    mars_weather = result.text
+    mars_weather = mars_weather.replace("Mars Weather@MarsWxReport·12h","")
 
 
     # Exit Browser.
